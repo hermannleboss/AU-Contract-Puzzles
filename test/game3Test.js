@@ -1,35 +1,38 @@
-const { loadFixture } = require('@nomicfoundation/hardhat-network-helpers');
-const { assert } = require('chai');
+const {loadFixture} = require('@nomicfoundation/hardhat-network-helpers');
+const {assert} = require('chai');
 
 describe('Game3', function () {
-  async function deployContractAndSetVariables() {
-    const Game = await ethers.getContractFactory('Game3');
-    const game = await Game.deploy();
+    async function deployContractAndSetVariables() {
+        const Game = await ethers.getContractFactory('Game3');
+        const game = await Game.deploy();
 
-    // Hardhat will create 10 accounts for you by default
-    // you can get one of this accounts with ethers.provider.getSigner
-    // and passing in the zero-based indexed of the signer you want:
-    const signer = ethers.provider.getSigner(0);
+        // Hardhat will create 10 accounts for you by default
+        // you can get one of this accounts with ethers.provider.getSigner
+        // and passing in the zero-based indexed of the signer you want:
+        const [signer, signer2, signer3] = await ethers.getSigners(0);
 
-    // you can get that signer's address via .getAddress()
-    // this variable is NOT used for Contract 3, just here as an example
-    const address = await signer.getAddress();
 
-    return { game, signer };
-  }
+        // you can get that signer's address via .getAddress()
+        // this variable is NOT used for Contract 3, just here as an example
+        const address = await signer.getAddress();
 
-  it('should be a winner', async function () {
-    const { game, signer } = await loadFixture(deployContractAndSetVariables);
+        return {game, signer, signer2, signer3};
+    }
 
-    // you'll need to update the `balances` mapping to win this stage
+    it('should be a winner', async function () {
+        const {game, signer, signer2, signer3} = await loadFixture(deployContractAndSetVariables);
 
-    // to call a contract as a signer you can use contract.connect
-    await game.connect(signer).buy({ value: '1' });
+        // you'll need to update the `balances` mapping to win this stage
 
-    // TODO: win expects three arguments
-    await game.win();
+        // to call a contract as a signer you can use contract.connect
+        await game.connect(signer).buy({value: '20'});
+        await game.connect(signer2).buy({value: '30'});
+        await game.connect(signer3).buy({value: '10'});
 
-    // leave this assertion as-is
-    assert(await game.isWon(), 'You did not win the game');
-  });
+        // TODO: win expects three arguments
+        await game.win(signer.getAddress(), signer2.getAddress(), signer3.getAddress());
+
+        // leave this assertion as-is
+        assert(await game.isWon(), 'You did not win the game');
+    });
 });
